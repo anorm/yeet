@@ -71,8 +71,6 @@ def ensure_repo_exists(path: Path, url):
 
 
 def write_repo(path, message):
-    subprocess.run(["git", "-C", path, "checkout", "--orphan", "temp"],
-                   check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     subprocess.run(["git", "-C", path, "rm", "-rf", "."],
                    check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     with open(path / "text.txt", "w") as f:
@@ -80,12 +78,6 @@ def write_repo(path, message):
     subprocess.run(["git", "-C", path, "add", path],
                    check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     subprocess.run(["git", "-C", path, "commit", "-m", "Updates"],
-                   check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    subprocess.run(["git", "-C", path, "checkout", "main"],
-                   check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    subprocess.run(["git", "-C", path, "reset", "--hard", "temp"],
-                   check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    subprocess.run(["git", "-C", path, "branch", "-D", "temp"],
                    check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     subprocess.run(["git", "-c", "push.default=simple", "-C", path, "push", "--force"],
                    check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
