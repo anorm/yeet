@@ -70,44 +70,31 @@ def ensure_repo_exists(path: Path, url):
                 check=True)
 
 
-def set_repo_message(path, message):
-    for item in os.listdir(path):
-        if item == ".git":
-            continue
-
-        full_path = os.path.join(path, item)
-
-        if os.path.isfile(full_path) or os.path.islink(full_path):
-            os.unlink(full_path)
-        elif os.path.isdir(full_path):
-            shutil.rmtree(full_path)
+def write_repo(path, message):
+    subprocess.run(["git", "-C", path, "checkout", "--orphan", "temp"],
+                   check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.run(["git", "-C", path, "rm", "-rf", "."],
+                   check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     with open(path / "text.txt", "w") as f:
         f.write(message)
-
-
-def commit_and_push(path):
-    subprocess.run(
-            ["git", "-C", path, "add", path],
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
-    subprocess.run(
-            ["git", "-C", path, "commit", "-m", "updates"],
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
-    subprocess.run(
-            ["git", "-c", "push.default=simple", "-C", path, "push"],
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
+    subprocess.run(["git", "-C", path, "add", path],
+                   check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.run(["git", "-C", path, "commit", "-m", "Updates"],
+                   check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.run(["git", "-C", path, "checkout", "main"],
+                   check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.run(["git", "-C", path, "reset", "--hard", "temp"],
+                   check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.run(["git", "-C", path, "branch", "-D", "temp"],
+                   check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.run(["git", "-c", "push.default=simple", "-C", path, "push", "--force"],
+                   check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
 def set_gist(nickname: str, gist_url: str, content: str):
     repo_path = CACHE_DIR / nickname / "tx"
     ensure_repo_exists(repo_path, gist_url)
-    set_repo_message(repo_path, content)
-    commit_and_push(repo_path)
+    write_repo(repo_path, content)
 
 
 def fingerprint_from_pattern(pattern):
